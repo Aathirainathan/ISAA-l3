@@ -8,7 +8,7 @@ app.config['MYSQL_USER']='1gHwgAeSYz'
 app.config['MYSQL_PASSWORD']='jxlT9gsWiu'
 app.config['MYSQL_HOST']='remotemysql.com'
 app.config['MYSQL_DB']='1gHwgAeSYz'
-app.config['MYSQL_CURSORCLASS']= 'DictCursor'
+# app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
 
@@ -25,8 +25,17 @@ def index():
     except:
         print('Connection Failed!')
 
-        
+
     # cur.execute('''CREATE TABLE example (id INTEGER)''')
+    # cur.execute('''Insert into example(1)''')
+    # mysql.connection.commit()
+
+    # cur.execute('''Select * from example''')
+    # results=cur.fetchall()
+    # print(results)
+    # return str(results[0][0])
+
+
     return 'Done!'
 
 # @app.route('/')
