@@ -7,20 +7,21 @@
     <title>Document</title>
 </head>
 <body>
-    <div>
+    <!-- <form action="" method="post">
         <h1>Topic</h1>
         <input type="text" name="Topic">
         <h1>Description</h1>
         <input type="text" name="Description"><br><br>
-        <button>Encrypt</button>
-    </div>
+        <button type="submit">Encrypt</button>
+    </form> -->
+       
     <div>
         <h1>Encrypted Items</h1>
         <ol>
-            <li><a href="#">haha</a></li>
-            <li><a href="#">haha</a></li>
-            <li><a href="#">haha</a></li>
-          </ol>
+            {% for message in messages:%}
+            <li>{{message[2]}}</li>
+            {%endfor%}
+        </ol>     
     </div>
 </body>
 </html>
