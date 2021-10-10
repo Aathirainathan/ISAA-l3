@@ -5,23 +5,45 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-    <!-- <form action="" method="post">
-        <h1>Topic</h1>
-        <input type="text" name="Topic">
-        <h1>Description</h1>
-        <input type="text" name="Description"><br><br>
-        <button type="submit">Encrypt</button>
-    </form> -->
-       
+        <div>
+            <a href="/logout">
+                <button class="logout">
+                        Logout
+                </button>
+            </a>
+        </div>
     <div>
-        <h1>Encrypted Items</h1>
-        <ol>
-            {% for message in messages:%}
-            <li>{{message[2]}}</li>
-            {%endfor%}
-        </ol>     
+        
+    </div>
+    <div class="form_container">
+        <form  method="post">
+            <label for="Topic">Topic</label>
+            <input id="Topic" type="text" name="Topic">
+            <label for="desc">Description</label>
+            <textarea id="desc" name="description"></textarea>
+            <br><br>
+            <div class="submit">
+            <button type="submit" class="sbt">Encrypt</button>
+            </div>
+        </form>
+    </div>
+
+    <div >
+        <div>
+            <h1>Encrypted Items</h1>
+        {% for message in messages:%}
+        <div class="message">
+        <li>
+        {{message}}
+        </li>
+        </div>
+        
+        {%endfor%}  
+        </div>
+         
     </div>
 </body>
 </html>
