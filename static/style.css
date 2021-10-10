@@ -15,13 +15,14 @@ h2{
     color: wheat;
 }
 .form_container{
-    height: 60vh;
+    min-height: 50vh;
     display: flex;
     justify-content: center;
     align-items: center;
 
 }
 form{
+    border: 2px solid black;
     width: 35%;
     display: flex;
     flex-direction: column;
@@ -36,11 +37,19 @@ div{
 .submit{
     align-items: center;
 }
-button{
+.sbt{
     color: white;
     padding: 6px;
     width: 80px;
     background-color: green;
 }
+
+.logout{
+    color: white;
+    padding: 6px;
+    width: 80px;
+    background-color: red;
+}
+
 
         

@@ -1,9 +1,13 @@
-from flask import Flask,render_template, redirect, request,flash
+from flask import Flask,render_template, redirect, request,flash,session
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
+from cryptography.fernet import Fernet
 
 
 app = Flask(__name__)
+
+key=b'zHkzFtBbF7iAC_LGYWT8iQzP9gt2NFi8TVYAZdamgNY='
+
 
 app.config['MYSQL_USER']='1gHwgAeSYz'
 app.config['MYSQL_PASSWORD']='jxlT9gsWiu'
@@ -13,72 +17,78 @@ app.config['MYSQL_DB']='1gHwgAeSYz'
 
 mysql = MySQL(app)
 
+# @app.route('/')
+# def index():
+#     try:
+#         cur= mysql.connection.cursor()
+#         print('Connection Successful!')
+#         try:          
+#             cur.close()
+#             print('Cursor closed')
+#         except:
+#             print('Unable to close cursor')
+#     except:
+#         print('Connection Failed!')
+#     return "done"
+
 @app.route('/')
 def index():
-    try:
-        cur= mysql.connection.cursor()
-        print('Connection Successful!')
-        try: 
-            #cur.execute("""INSERT INTO clients (id, email, password) VALUES (3,'kiran@gmail.com','kiran');""")
-            #mysql.connection.commit()           
-            cur.close()
-            print('Cursor closed')
-        except:
-            print('Unable to close cursor')
-    except:
-        print('Connection Failed!')
-
-
-    # cur.execute('''CREATE TABLE example (id INTEGER)''')
-    # cur.execute('''Insert into example(1)''')
-    # mysql.connection.commit()
-
-    # cur.execute('''Select * from example''')
-    # results=cur.fetchall()
-    # print(results)
-    # return str(results[0][0])
-    return "done"
-
-# @app.route('/')
-# def home():
-#     if(True):
-#         return redirect('/signup')
-#     return render_template("home.html")
+    return redirect('/home')
 
 
 @app.route('/signup',methods=['POST','GET'])
 def signup():
     if request.method=='POST':
         data=request.form
-        cemail=data.get('email')
-        cname=data.get('name')
-        cpassword=data.get('password1')
-        password2=data.get('password2')
-
+        email=data.get('email')
+        name=data.get('name')
+        password=data.get('password1')
+        #password2=data.get('password2')
         try:
             cur= mysql.connection.cursor()
             print('Connection Successful!')
-                
             try: 
-                cur.ececute("""SELECT * FROM clients""")
-                user = cur.fetchall()
-                id=len(user)+1
+                cur.execute("""SELECT * FROM clients""")
+                userss=cur.fetchall()
+                mysql.connection.commit() 
+                id=len(userss)+2
+                print(id)
                 print("fetched id")
-                cur.execute("""INSERT INTO clients ( id,email, password) VALUES (%s,%s,%s);""",(id,cemail,cpassword,))
-                print("executed insertion")
-                mysql.connection.commit()           
+                cur.execute("""INSERT INTO clients ( id,email, password) VALUES (%s,%s,%s)""",(id,email,password,))
+                mysql.connection.commit() 
+                print("executed insertion")          
                 cur.close()
                 print('Cursor closed')
                 return redirect('/login')
             except:
                 print('Unable to close cursor')
-
+                return "unable to close cursor"
         except:
-            print('unable to connect')
+            print('Connection Failed!')
+            return "connection failed"
+    return render_template("signup.html")
+    
+        # try:
+        #     cur= mysql.connection.cursor()
+        #     print('Connection Successful!')
+            
+        #     cur.ececute("""SELECT * FROM clients""")
+        #     user = cur.fetchall()
+        #     mysql.connection.commit()
+        #     id=5
+        #     print("fetched id")
+        #     cur.execute("""INSERT INTO clients ( id,email, password) VALUES (%s,%s,%s)""",(id,cemail,cpassword,))
+        #     print("executed insertion")
+        #     mysql.connection.commit()           
+        #     cur.close()
+        #     print('Cursor closed')
+        #     return redirect('/login')
+        # except:
+        #     print('unable to connect')
+
         #return redirect('/login')
 
         #INSERT INTO `clients` (`id`, `email`, `password`) VALUES ('1', 'kapil@gmail.com', 'kapil'), ('2', 'vaya@gmail.com', 'vaya');
-    return render_template("signup.html")
 
 
 
@@ -94,17 +104,21 @@ def login():
             cur= mysql.connection.cursor()
             print('Connection Successful!')
             #return redirect('/')
-            cur.execute('SELECT password FROM clients where email=%s;',(email,))
-            pwd=cur.fetchone()
-            print(pwd[0])
+            cur.execute("""SELECT * FROM clients where email=%s""",(email,))
+            pwd=cur.fetchall()
+            print(pwd[0][2])
             print(password)
-            if(pwd[0]==password):
+            if(pwd[0][2]==password):
+                session['id']=pwd[0][0]
+                session['email']=pwd[0][1]
                 return redirect('/')
             else:
                 return "invalid password"
         except:
             print('Connection Failed!')
-        
+    return render_template("login.html")
+    
+
             # if(cur.execute('''SELECT password FROM `clients` where email=email''')):
             #     pwd=cur.fetchall()
             # else:
@@ -114,38 +128,92 @@ def login():
             #         return redirect('/')
             #     else:
             #         flash('invlaid password',category='error')
-        
-    return render_template("login.html")
 
-@app.route('/home')
+@app.route('/logout')
+def logout():
+    if 'email' in session:
+        session.pop('email')
+    if 'id' in session:
+        session.pop('id')  
+    return redirect('/login') 
+
+
+@app.route('/home',methods=['POST','GET'])
 def home():
-    try:
-        cur= mysql.connection.cursor()
-        print('Connection Successful!')
+    if 'id' not in session:
+        print("not signed in")
+        return redirect('/login')
+    else:
+        print(session['id'])
+        if request.method=='POST':
+            data=request.form
+            topic=data.get('Topic')
+            desc=data.get('description')
+            fernet=Fernet(key)
+            message=fernet.encrypt(desc.encode('utf-8'))
+            id=session['id']
+            print(id,topic, message)
+        #password2=data.get('password2')
+            try:
+                cur= mysql.connection.cursor()
+                print('Connection Successful!')
+                try: 
+                    cur.execute("""INSERT INTO messages ( id,title, description) VALUES (%s,%s,%s)""",(id,topic,message,))
+                    mysql.connection.commit() 
+                    print("executed insertion")          
+                    cur.close()
+                    print('Cursor closed')
+                    return redirect('/home')
+                except:
+                    print('Unable to close cursor')
+                    return "unable to close cursor"
+            except:
+                print('Connection Failed!')
+                return "connection failed"
 
-        try: 
-            email='kapil@gmail.com'
-            cur.execute("""Select * from clients where email=%s""",(email,))
-            user=cur.fetchall()
-            mysql.connection.commit() 
-            id=user[0][0]
-            print(id)
-            cur.execute("""Select * from messages where id=%s""",(id,))
-            messages=cur.fetchall()
-            mysql.connection.commit()
-            for i in messages:
-                print(i[1])          
-            cur.close()
-            print('Cursor closed')
+        else:
+            try:
+                cur= mysql.connection.cursor()
+                print('Connection Successful!')
+                try: 
+            #email='kapil@gmail.com'
+                    cur.execute("""Select * from clients""")
+            # cur.execute("""Select * from clients where email=%s""",(email,))
+                    mysql.connection.commit() 
+                    user=cur.fetchall()
+                    id=user[1][0]
+                    print(id)
+                    cur.execute("""Select * from messages where id=%s""",(id,))
+                    messages=cur.fetchall()
+                    mysql.connection.commit()
+                    #print(messages[0][2])
+
+                    newmess=[]
+                    fernet=Fernet(key)
+                    for i in range(len(messages)):
+                        print(messages[i][2])
+                        mess=fernet.decrypt(messages[i][2].encode()).decode()
+                        print(mess)
+                        newmess.insert(i,mess)
+                    for i in newmess:
+                        print(i)
+                    cur.close()
+                    print('Cursor closed')
             #messages=["this is message 1","this is message 2"]
-            return render_template('home.html',messages=messages)
-        except:
-            print('Unable to close cursor')
-            return "unable to close cursor"
-    except:
-        print('Connection Failed!')
-        return "connection failed"
+                    return render_template('home.html',messages=newmess)
+                except:
+                    print('Unable to close cursor')
+                    return "unable to close cursor"
+            except:
+                print('Connection Failed!')
+                return "connection failed"
+
     
+    
+
+@app.route('/decrypt')
+def decrypt():
+    return render_template("decryption.html")
 
 if __name__=='__main__':
     app.secret_key="super secret key"
