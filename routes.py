@@ -12,7 +12,6 @@ app.config['MYSQL_USER']='1gHwgAeSYz'
 app.config['MYSQL_PASSWORD']='jxlT9gsWiu'
 app.config['MYSQL_HOST']='remotemysql.com'
 app.config['MYSQL_DB']='1gHwgAeSYz'
-# app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
 bcrypt=Bcrypt(app)
@@ -35,12 +34,6 @@ def signup():
             cur= mysql.connection.cursor()
             print('Connection Successful!')
             try: 
-                cur.execute("""SELECT * FROM clients""")
-                clientData=cur.fetchall()
-                mysql.connection.commit() 
-                # id=len(clientData)+2
-                # print(id)
-                print("fetched id")
                 cur.execute("""INSERT INTO clients (email, password) VALUES (%s,%s)""",(email,passwordHash,))
                 mysql.connection.commit() 
                 print("executed insertion")          
@@ -54,29 +47,6 @@ def signup():
             print('Connection Failed!')
             return "connection failed"
     return render_template("signup.html")
-    
-        # try:
-        #     cur= mysql.connection.cursor()
-        #     print('Connection Successful!')
-            
-        #     cur.ececute("""SELECT * FROM clients""")
-        #     user = cur.fetchall()
-        #     mysql.connection.commit()
-        #     id=5
-        #     print("fetched id")
-        #     cur.execute("""INSERT INTO clients ( id,email, password) VALUES (%s,%s,%s)""",(id,cemail,cpassword,))
-        #     print("executed insertion")
-        #     mysql.connection.commit()           
-        #     cur.close()
-        #     print('Cursor closed')
-        #     return redirect('/login')
-        # except:
-        #     print('unable to connect')
-
-        #return redirect('/login')
-
-        #INSERT INTO `clients` (`id`, `email`, `password`) VALUES ('1', 'kapil@gmail.com', 'kapil'), ('2', 'vaya@gmail.com', 'vaya');
-
 
 
 @app.route('/login',methods=['POST','GET'])
@@ -90,7 +60,6 @@ def login():
         try:
             cur= mysql.connection.cursor()
             print('Connection Successful!')
-            #return redirect('/')
             cur.execute("""SELECT * FROM clients where email=%s""",(email,))
             clientData=cur.fetchall()
             print(clientData)
@@ -132,7 +101,6 @@ def home():
         print("not signed in")
         return redirect('/login')
     else:
-        print(session['id'])
         if request.method=='POST':
             data=request.form
             topic=data.get('Topic')
@@ -140,8 +108,6 @@ def home():
             fernet=Fernet(key)
             message=fernet.encrypt(desc.encode('utf-8'))
             id=session['id']
-            print(id,topic, message)
-        #password2=data.get('password2')
             try:
                 cur= mysql.connection.cursor()
                 print('Connection Successful!')
@@ -162,29 +128,22 @@ def home():
         else:
             try:
                 cur= mysql.connection.cursor()
-                print('Connection Successful!')
-                try: 
-            #email='kapil@gmail.com'
-                    cur.execute("""Select * from clients""")
-            # cur.execute("""Select * from clients where email=%s""",(email,))
-                    mysql.connection.commit() 
-                    user=cur.fetchall()
-                    id=user[1][0]
-                    print(id)
-                    cur.execute("""Select * from messages where id=%s""",(id,))
+                print('Connection Successful! in else')
+                try:
+                    cur.execute("""Select * from messages where id=%s""",(session['id'],))
                     messages=cur.fetchall()
+                    print(messages)
                     mysql.connection.commit()
-                    #print(messages[0][2])
 
                     newmess=[]
                     fernet=Fernet(key)
                     for i in range(len(messages)):
-                        print(messages[i][2])
+                        # print(messages[i][2])
                         mess=fernet.decrypt(messages[i][2].encode()).decode()
-                        print(mess)
+                        # print(mess)
                         newmess.insert(i,mess)
-                    for i in newmess:
-                        print(i)
+                    # for i in newmess:
+                    #     print(i)
                     cur.close()
                     print('Cursor closed')
             #messages=["this is message 1","this is message 2"]
@@ -204,5 +163,9 @@ def decrypt():
     return render_template("decryption.html")
 
 if __name__=='__main__':
-    app.secret_key="super secret key"
+    app.secret_key="super_secret_key"
     app.run(debug=True)
+
+
+#match pwd and confirm pwd
+# required fields in signup login all
