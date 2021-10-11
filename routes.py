@@ -2,12 +2,11 @@ from flask import Flask,render_template, redirect, request,flash,session
 from flask_mysqldb import MySQL
 import MySQLdb.cursors
 from cryptography.fernet import Fernet
-
+from flask_bcrypt import Bcrypt
 
 app = Flask(__name__)
 
 key=b'zHkzFtBbF7iAC_LGYWT8iQzP9gt2NFi8TVYAZdamgNY='
-
 
 app.config['MYSQL_USER']='1gHwgAeSYz'
 app.config['MYSQL_PASSWORD']='jxlT9gsWiu'
@@ -16,20 +15,7 @@ app.config['MYSQL_DB']='1gHwgAeSYz'
 # app.config['MYSQL_CURSORCLASS']= 'DictCursor'
 
 mysql = MySQL(app)
-
-# @app.route('/')
-# def index():
-#     try:
-#         cur= mysql.connection.cursor()
-#         print('Connection Successful!')
-#         try:          
-#             cur.close()
-#             print('Cursor closed')
-#         except:
-#             print('Unable to close cursor')
-#     except:
-#         print('Connection Failed!')
-#     return "done"
+bcrypt=Bcrypt(app)
 
 @app.route('/')
 def index():
@@ -43,18 +29,19 @@ def signup():
         email=data.get('email')
         name=data.get('name')
         password=data.get('password1')
-        #password2=data.get('password2')
+        passwordHash=bcrypt.generate_password_hash(password)
+        
         try:
             cur= mysql.connection.cursor()
             print('Connection Successful!')
             try: 
                 cur.execute("""SELECT * FROM clients""")
-                userss=cur.fetchall()
+                clientData=cur.fetchall()
                 mysql.connection.commit() 
-                id=len(userss)+2
-                print(id)
+                # id=len(clientData)+2
+                # print(id)
                 print("fetched id")
-                cur.execute("""INSERT INTO clients ( id,email, password) VALUES (%s,%s,%s)""",(id,email,password,))
+                cur.execute("""INSERT INTO clients (email, password) VALUES (%s,%s)""",(email,passwordHash,))
                 mysql.connection.commit() 
                 print("executed insertion")          
                 cur.close()
@@ -105,12 +92,13 @@ def login():
             print('Connection Successful!')
             #return redirect('/')
             cur.execute("""SELECT * FROM clients where email=%s""",(email,))
-            pwd=cur.fetchall()
-            print(pwd[0][2])
+            clientData=cur.fetchall()
+            print(clientData)
+            print(clientData[0][2])
             print(password)
-            if(pwd[0][2]==password):
-                session['id']=pwd[0][0]
-                session['email']=pwd[0][1]
+            if(bcrypt.check_password_hash(clientData[0][2],password)):
+                session['id']=clientData[0][0]
+                session['email']=clientData[0][1]
                 return redirect('/')
             else:
                 return "invalid password"
