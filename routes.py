@@ -121,9 +121,9 @@ def home():
 def decrypt(topic,message):
     
     fernet=Fernet(key)
-    decryptedMessage=fernet.decrypt(message.encode()).decode()
-    
-    return render_template("decryption.html",topic=topic,encryptedMessage=message,decryptedMessage=decryptedMessage)
+    decryptedMessage=fernet.decrypt(message.encode()).decode()    
+
+    return render_template("decryption.html",topic=topic,decryptedMessage=decryptedMessage)
 
 
 @app.route('/logout')

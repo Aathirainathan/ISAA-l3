@@ -53,4 +53,6 @@ div{
 
 .messageList{
     text-decoration: none;
+    color: white;
+    font-size: large;
 }
