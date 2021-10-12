@@ -8,6 +8,14 @@
     <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+   {% if messages %}
+      {% for message in messages %}
+         {{ message }}
+      {% endfor %}
+   {% endif %}
+{% endwith %}
+
         <div>
             <a href="/logout">
                 <button class="logout">
@@ -23,7 +31,7 @@
             <label for="Topic">Topic</label>
             <input id="Topic" type="text" name="Topic">
             <label for="desc">Description</label>
-            <textarea id="desc" name="description"></textarea>
+            <textarea id="desc" name="Description"></textarea>
             <br><br>
             <div class="submit">
             <button type="submit" class="sbt">Encrypt</button>
@@ -37,13 +45,12 @@
         {% for message in messages:%}
         <div class="message">
         <li>
-        {{message}}
+        <a href="{{url_for('decrypt',topic=message[1],message=message[2])}}">{{message[1]}}</a>
         </li>
         </div>
         
         {%endfor%}  
         </div>
-         
     </div>
 </body>
 </html>

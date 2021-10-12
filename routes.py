@@ -23,68 +23,108 @@ def index():
 
 @app.route('/signup',methods=['POST','GET'])
 def signup():
-    if request.method=='POST':
-        data=request.form
-        email=data.get('email')
-        name=data.get('name')
-        password=data.get('password1')
-        passwordHash=bcrypt.generate_password_hash(password)
-        
-        try:
-            cur= mysql.connection.cursor()
-            print('Connection Successful!')
-            try: 
-                cur.execute("""INSERT INTO clients (email, password) VALUES (%s,%s)""",(email,passwordHash,))
-                mysql.connection.commit() 
-                print("executed insertion")          
-                cur.close()
-                print('Cursor closed')
-                return redirect('/login')
+    if 'id' in session:
+        return redirect('/home')
+    else:
+        if request.method=='POST':
+            email=request.form.get('email')
+            name=request.form.get('name')
+            password=request.form.get('password1')
+            passwordHash=bcrypt.generate_password_hash(password)
+            
+            try:
+                cur= mysql.connection.cursor()
+                print('Connection Successful!')
+                try: 
+                    cur.execute("""INSERT INTO clients (email, password) VALUES (%s,%s)""",(email,passwordHash,))
+                    mysql.connection.commit()        
+                    cur.close()
+                    flash('Signup Successful')
+                    return redirect('/login')
+                except:
+                    flash('Signup Unsuccessful. Try Again!',category='error')
             except:
-                print('Unable to close cursor')
-                return "unable to close cursor"
-        except:
-            print('Connection Failed!')
-            return "connection failed"
-    return render_template("signup.html")
+                flash('Failed to connect to the database. Try again!',category='error')
+        return render_template("signup.html")
 
 
 @app.route('/login',methods=['POST','GET'])
 def login():
-    if request.method=='POST':
-        data=request.form
-        email=data.get('email')
-        print(email)
-        password=data.get('password')
-        print(password)
-        try:
-            cur= mysql.connection.cursor()
-            print('Connection Successful!')
-            cur.execute("""SELECT * FROM clients where email=%s""",(email,))
-            clientData=cur.fetchall()
-            print(clientData)
-            print(clientData[0][2])
-            print(password)
-            if(bcrypt.check_password_hash(clientData[0][2],password)):
-                session['id']=clientData[0][0]
-                session['email']=clientData[0][1]
-                return redirect('/')
-            else:
-                return "invalid password"
-        except:
-            print('Connection Failed!')
-    return render_template("login.html")
+    if 'id' in session:
+        return redirect('/home')
+    else:
+        if request.method=='POST':
+            email=request.form.get('email')
+            password=request.form.get('password')
+            try:
+                cur= mysql.connection.cursor()
+                print('Connection Successful!')
+                cur.execute("""SELECT * FROM clients where email=%s""",(email,))
+                clientData=cur.fetchall()
+                if(bcrypt.check_password_hash(clientData[0][2],password)):
+                    session['id']=clientData[0][0]
+                    session['email']=clientData[0][1]
+                    flash('Login Successful',category='success')
+                    return redirect('/home')
+                else:
+                    flash('Invalid Email/Password! Try again!',category='error' )
+            except:
+                flash('Failed to connect to the database. Try again!',category='error')
+        return render_template("login.html")
+
+
+@app.route('/home',methods=['POST','GET'])
+def home():
+    if 'id' not in session:
+        flash('Login to Continue!',category='error')
+        return redirect('/login')
+    else:
+        if request.method=='POST':
+            topic=request.form.get('Topic')
+            description=request.form.get('Description')
+            fernet=Fernet(key)
+            message=fernet.encrypt(description.encode('utf-8'))
+            id=session['id']
+            try:
+                cur= mysql.connection.cursor()
+                print('Connection Successful!')
+                try: 
+                    cur.execute("""INSERT INTO messages ( id,title, description) VALUES (%s,%s,%s)""",(id,topic,message,))
+                    mysql.connection.commit() 
+                    cur.close()
+                    flash('Successfully Encrypted and Stored in the Database!','success')
+                    return redirect('/home')
+                except:
+                    flash('Error Occured While Storing in the Database. Try again!','error')
+            except:
+                flash('Failed to connect to the database. Try again!',category='error')
+
+        else:
+            try:
+                cur= mysql.connection.cursor()
+                print('connection successful')
+                try:
+                    cur.execute("""Select * from messages where id=%s""",(session['id'],))
+                    messages=cur.fetchall()
+                    mysql.connection.commit()
+                    cur.close()
+                    return render_template('home.html',messages=messages)
+                except:
+                    flash('Unable to Fetch Messages!','error')
+            except:
+               flash('Failed to connect to the database. Try again!',category='error')
+
     
 
-            # if(cur.execute('''SELECT password FROM `clients` where email=email''')):
-            #     pwd=cur.fetchall()
-            # else:
-            #     print("error in query")
-            # if(pwd):
-            #     if(pwd==password):
-            #         return redirect('/')
-            #     else:
-            #         flash('invlaid password',category='error')
+
+@app.route('/decrypt/<topic>/<message>')
+def decrypt(topic,message):
+    
+    fernet=Fernet(key)
+    decryptedMessage=fernet.decrypt(message.encode()).decode()
+    
+    return render_template("decryption.html",topic=topic,encryptedMessage=message,decryptedMessage=decryptedMessage)
+
 
 @app.route('/logout')
 def logout():
@@ -93,74 +133,6 @@ def logout():
     if 'id' in session:
         session.pop('id')  
     return redirect('/login') 
-
-
-@app.route('/home',methods=['POST','GET'])
-def home():
-    if 'id' not in session:
-        print("not signed in")
-        return redirect('/login')
-    else:
-        if request.method=='POST':
-            data=request.form
-            topic=data.get('Topic')
-            desc=data.get('description')
-            fernet=Fernet(key)
-            message=fernet.encrypt(desc.encode('utf-8'))
-            id=session['id']
-            try:
-                cur= mysql.connection.cursor()
-                print('Connection Successful!')
-                try: 
-                    cur.execute("""INSERT INTO messages ( id,title, description) VALUES (%s,%s,%s)""",(id,topic,message,))
-                    mysql.connection.commit() 
-                    print("executed insertion")          
-                    cur.close()
-                    print('Cursor closed')
-                    return redirect('/home')
-                except:
-                    print('Unable to close cursor')
-                    return "unable to close cursor"
-            except:
-                print('Connection Failed!')
-                return "connection failed"
-
-        else:
-            try:
-                cur= mysql.connection.cursor()
-                print('Connection Successful! in else')
-                try:
-                    cur.execute("""Select * from messages where id=%s""",(session['id'],))
-                    messages=cur.fetchall()
-                    print(messages)
-                    mysql.connection.commit()
-
-                    newmess=[]
-                    fernet=Fernet(key)
-                    for i in range(len(messages)):
-                        # print(messages[i][2])
-                        mess=fernet.decrypt(messages[i][2].encode()).decode()
-                        # print(mess)
-                        newmess.insert(i,mess)
-                    # for i in newmess:
-                    #     print(i)
-                    cur.close()
-                    print('Cursor closed')
-            #messages=["this is message 1","this is message 2"]
-                    return render_template('home.html',messages=newmess)
-                except:
-                    print('Unable to close cursor')
-                    return "unable to close cursor"
-            except:
-                print('Connection Failed!')
-                return "connection failed"
-
-    
-    
-
-@app.route('/decrypt')
-def decrypt():
-    return render_template("decryption.html")
 
 if __name__=='__main__':
     app.secret_key="super_secret_key"
