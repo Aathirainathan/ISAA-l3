@@ -4,17 +4,12 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Home</title>
     <link rel="stylesheet" href="../static/style.css">
 </head>
 <body>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-   {% if messages %}
-      {% for message in messages %}
-         {{ message }}
-      {% endfor %}
-   {% endif %}
-{% endwith %}
+    <h1>ISSA Digial Assignement Task </h1>
+    <h2>Enter your information below. It would be encrypted and stored in our database.</h2>
 
         <div>
             <a href="/logout">
@@ -41,11 +36,13 @@
 
     <div >
         <div>
-            <h1>Encrypted Items</h1>
+        {% if messages %}
+        <h1>Encrypted Items</h1>
+        {% endif %}
         {% for message in messages:%}
         <div class="message">
         <li>
-        <a href="{{url_for('decrypt',topic=message[1],message=message[2])}}">{{message[1]}}</a>
+        <a href="{{url_for('decrypt',topic=message[1],message=message[2])}}" class="messageList">{{message[1]}}</a>
         </li>
         </div>
         

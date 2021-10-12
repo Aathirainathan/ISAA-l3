@@ -51,5 +51,6 @@ div{
     background-color: red;
 }
 
-
-        
+.messageList{
+    text-decoration: none;
+}

@@ -137,7 +137,3 @@ def logout():
 if __name__=='__main__':
     app.secret_key="super_secret_key"
     app.run(debug=True)
-
-
-#match pwd and confirm pwd
-# required fields in signup login all
